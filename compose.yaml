@@ -8,16 +8,6 @@ services:
       - ./:/var/www/symfony 
     depends_on:
       - db
-    env_file:
-      - .env
-    environment:
-     
-      APP_ENV: dev
-      APP_SECRET: '!ChangeMe!'
-    
-      DATABASE_URL: "mysql://app:password@db:3306/app_db?serverVersion=8.0&charset=utf8mb4"
-  
-      MAILER_DSN: "smtp://mailhog:1025" 
     networks:
       - weather_api_net
 
@@ -46,12 +36,13 @@ services:
       MYSQL_ROOT_PASSWORD: root_password
     volumes:
       - weather_api_db_data:/var/lib/mysql
-      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql 
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - weather_api_net
 
   mailhog: 
     image: mailhog/mailhog:latest
+    platform: linux/amd64
     container_name: weather_api_mailhog
     ports:
       - "1025:1025"
@@ -65,4 +56,3 @@ volumes:
 networks:
   weather_api_net:
     driver: bridge
-    

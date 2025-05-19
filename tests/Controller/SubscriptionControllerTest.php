@@ -16,7 +16,7 @@ class SubscriptionControllerTest extends WebTestCase
 
 	protected function setUp(): void
 	{
-		$this->markTestSkipped('Temporarily skipping SubscriptionControllerTest due to persistent DB issues.');
+		// $this->markTestSkipped('Temporarily skipping SubscriptionControllerTest due to persistent DB issues.');
 
 
 		parent::setUp();
@@ -66,7 +66,7 @@ class SubscriptionControllerTest extends WebTestCase
 		$responseContentConfirm = json_decode($this->client->getResponse()->getContent(), true);
 		$this->assertEquals('Subscription confirmed successfully', $responseContentConfirm['message']);
 
-		$this->entityManager->refresh($subscription);
+		$subscription = $this->subscriptionRepository->findOneBy(['email' => $testEmail]);
 		$this->assertTrue($subscription->isIsConfirmed(), 'Subscription should be confirmed.');
 		$this->assertNull($subscription->getConfirmationToken(), 'Confirmation token should be nullified after confirmation.');
 	}
@@ -138,7 +138,7 @@ class SubscriptionControllerTest extends WebTestCase
 		$this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
 
 		$responseContent = json_decode($this->client->getResponse()->getContent(), true);
-		$this->assertEquals('Token not found.', $responseContent['error']);
+		$this->assertEquals('Token not found or subscription already removed.', $responseContent['error']);
 	}
 
 	protected function tearDown(): void

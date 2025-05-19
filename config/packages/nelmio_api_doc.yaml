@@ -11,4 +11,3 @@ nelmio_api_doc:
             # Optional: if you need to explicitly point to where annotations are for this area
             # paths: ['%kernel.project_dir%/src/Controller'] 
 
-    # models: { use_jms: false }
