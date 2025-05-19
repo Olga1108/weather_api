@@ -18,14 +18,9 @@ class SubscriptionControllerTest extends WebTestCase
 	{
 		$this->markTestSkipped('Temporarily skipping SubscriptionControllerTest due to persistent DB issues.');
 
-		// Force environment to 'test'
-		$_SERVER['APP_ENV'] = $_ENV['APP_ENV'] = 'test';
-		$_SERVER['SYMFONY_ENV'] = $_ENV['SYMFONY_ENV'] = 'test';
-		putenv('APP_ENV=test');
-		putenv('SYMFONY_ENV=test');
 
 		parent::setUp();
-		sleep(2); // Add a small delay
+		sleep(2);
 
 		$this->client = static::createClient(['environment' => 'test', 'debug' => true]); // Explicitly set environment
 		$this->entityManager = $this->client->getContainer()->get('doctrine.orm.entity_manager');
@@ -71,7 +66,7 @@ class SubscriptionControllerTest extends WebTestCase
 		$responseContentConfirm = json_decode($this->client->getResponse()->getContent(), true);
 		$this->assertEquals('Subscription confirmed successfully', $responseContentConfirm['message']);
 
-		$this->entityManager->refresh($subscription); // Refresh entity state from DB
+		$this->entityManager->refresh($subscription);
 		$this->assertTrue($subscription->isIsConfirmed(), 'Subscription should be confirmed.');
 		$this->assertNull($subscription->getConfirmationToken(), 'Confirmation token should be nullified after confirmation.');
 	}

@@ -50,7 +50,7 @@ class SendWeatherUpdatesCommand extends Command
 
 		if (empty($subscriptions)) {
 			$output->writeln(sprintf('<info>No confirmed subscriptions found for frequency: %s</info>', $frequency));
-			return Command::SUCCESS; // Still a success, just nothing to do
+			return Command::SUCCESS;
 		}
 
 		$groupedByCity = [];
@@ -93,7 +93,7 @@ class SendWeatherUpdatesCommand extends Command
 				'description' => $data['current']['condition']['text'],
 			];
 		} catch (\Throwable $e) {
-			// It might be good to log this error
+
 			$output->writeln(sprintf('<error>Error fetching weather for %s: %s</error>', $city, $e->getMessage()));
 			return null;
 		}
