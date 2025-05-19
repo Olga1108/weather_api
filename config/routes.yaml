@@ -1,0 +1,11 @@
+controllers:
+    resource:
+        path: ../src/Controller/
+        namespace: App\Controller
+    type: attribute
+
+# Import NelmioApiDocBundle routes
+when@dev:
+    nelmio_api_doc_routes:
+        resource: './routes/nelmio_api_doc.yaml'
+        prefix: / # Ensure no extra prefix is added here

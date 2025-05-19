@@ -1,0 +1,7 @@
+# config/packages/doctrine_fixtures.yaml
+doctrine_fixtures:
+    # A list of directories that will be recursively scanned for fixtures
+    # You can also specify the full path to a single file.
+    paths:
+        # Default path for your fixtures
+        - '%kernel.project_dir%/src/DataFixtures' 

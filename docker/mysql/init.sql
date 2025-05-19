@@ -1,0 +1,11 @@
+CREATE USER IF NOT EXISTS 'app' @'%' IDENTIFIED BY 'password';
+GRANT CREATE,
+	ALTER,
+	DROP,
+	REFERENCES ON *.* TO 'app' @'%';
+CREATE DATABASE IF NOT EXISTS `app_db`;
+GRANT ALL PRIVILEGES ON `app_db`.* TO 'app' @'%';
+CREATE DATABASE IF NOT EXISTS `app_db_test`;
+GRANT ALL PRIVILEGES ON `app_db_test`.* TO 'app' @'%';
+GRANT ALL PRIVILEGES ON `app_db_test%`.* TO 'app' @'%';
+FLUSH PRIVILEGES;

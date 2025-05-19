@@ -1,0 +1,14 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: Weather Forecast API
+            description: "Weather API application that allows users to subscribe to weather updates for their city."
+            version: "1.0.0"
+    areas:
+        default: # Default area, can be named anything or omitted if only one area
+            path_patterns: 
+                - ^/api(?!/doc$) # Include all /api/... routes except /api/doc...
+            # Optional: if you need to explicitly point to where annotations are for this area
+            # paths: ['%kernel.project_dir%/src/Controller'] 
+
+    # models: { use_jms: false }

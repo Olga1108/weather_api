@@ -1,0 +1,68 @@
+services:
+  php:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: weather_api_php
+    volumes:
+      - ./:/var/www/symfony 
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+     
+      APP_ENV: dev
+      APP_SECRET: '!ChangeMe!'
+    
+      DATABASE_URL: "mysql://app:password@db:3306/app_db?serverVersion=8.0&charset=utf8mb4"
+  
+      MAILER_DSN: "smtp://mailhog:1025" 
+    networks:
+      - weather_api_net
+
+  nginx:
+    image: nginx:latest
+    container_name: weather_api_nginx
+    ports:
+      - "8081:80" 
+    volumes:
+      - ./symfony/public:/var/www/symfony/public:ro 
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro 
+    depends_on:
+      - php
+    networks:
+      - weather_api_net
+
+  db:
+    image: mysql:8.0
+    container_name: weather_api_db
+    ports:
+      - "33061:3306" 
+    environment:
+      MYSQL_DATABASE: app_db
+      MYSQL_USER: app
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - weather_api_db_data:/var/lib/mysql
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql 
+    networks:
+      - weather_api_net
+
+  mailhog: 
+    image: mailhog/mailhog:latest
+    container_name: weather_api_mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - weather_api_net
+
+volumes:
+  weather_api_db_data:
+
+networks:
+  weather_api_net:
+    driver: bridge
+    
