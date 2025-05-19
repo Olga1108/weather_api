@@ -50,6 +50,19 @@ services:
     networks:
       - weather_api_net
 
+  setup:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: weather_api_setup
+    volumes:
+      - ./:/var/www/symfony
+    depends_on:
+      - db
+    entrypoint: ["/var/www/symfony/docker/php/init.sh"]
+    networks:
+      - weather_api_net
+
 volumes:
   weather_api_db_data:
 

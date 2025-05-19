@@ -1,143 +1,118 @@
 # Weather Forecast API Service
 
-This project provides a Weather Forecast API service allowing users to subscribe to weather updates for a specific city, confirm their subscription via email, and receive periodic weather forecasts.
+A PHP 8.3/Symfony 7.2 REST API for weather forecasts and email subscriptions, fully Dockerized with MySQL and MailHog for local development and testing.
 
-## 1. Prerequisites
+## Features
+- Subscribe to weather updates for a city (hourly/daily)
+- Email confirmation and unsubscribe links
+- Periodic weather update emails (via Symfony command)
+- Interactive API documentation (Stoplight UI)
+- Automated setup and test suite
 
-*   Docker and Docker Compose installed.
-*   Git installed.
-*   A `.env.local` file (see step 2c).
+---
 
-## 2. Initial Setup
+## Prerequisites
+- [Docker](https://www.docker.com/) and Docker Compose
+- [Git](https://git-scm.com/)
+- Obtain a free API key from [WeatherAPI.com](https://www.weatherapi.com/)
 
-a.  **Clone the Repository:**
-    ```bash
-    git clone <your-repository-url> # Replace <your-repository-url> with the actual URL
-    cd weather-api 
-    ```
+---
 
-b.  **Build Docker Images (if first time or Dockerfile changed):**
-    ```bash
-    docker compose build
-    ```
+## Quick Start
 
-c.  **Create Environment File:**
-    Copy `.env` to `.env.local` (or create `.env.local` directly if `.env` is not committed):
-    ```bash
-    cp .env .env.local
-    ```
-    **Edit `.env.local` and ensure the following are set correctly:**
-    *   `APP_ENV=dev`
-    *   `APP_SECRET=<generate_a_strong_secret_key>` (You can use `openssl rand -hex 16` to generate one)
-    *   `DATABASE_URL="mysql://app:password@db:3306/app_db?serverVersion=8.0&charset=utf8mb4"` (This should be correct by default if using the provided Docker setup.)
-    *   `MAILER_DSN="smtp://mailhog:1025"` (This should be correct for MailHog if you are using it.)
-    *   `WEATHER_API_KEY=<your_actual_weatherapi.com_api_key>` **(Crucial for the `/api/weather` endpoint and the `SendWeatherUpdatesCommand` to work. Obtain a key from [WeatherAPI.com](https://www.weatherapi.com/))**
+1. **Clone the repository:**
+   ```bash
+   git clone git@github.com:Olga1108/weather_api.git
+   cd weather-api
+   ```
 
-d.  **Install Composer Dependencies (inside the PHP container):**
-    First, ensure no old `vendor` directory exists if you're re-setting up or encountering issues:
-    ```bash
-    rm -rf vendor
-    ```
-    Then, start services (if not already running) and install:
-    ```bash
-    docker compose up -d
-    docker compose exec php composer install
-    ```
+2. **Create your environment file:**
+   ```bash
+   cp .env .env.local
+   # Edit .env.local and set:
+   #   APP_SECRET=<your-random-secret> (e.g. openssl rand -hex 16)
+   #   WEATHER_API_KEY=<your_weatherapi.com_key>
+   #   (DATABASE_URL and MAILER_DSN are correct by default for Docker)
+   ```
 
-e.  **Database Migrations:**
-    Run the database migrations to set up the schema:
-    ```bash
-    docker compose exec php php bin/console doctrine:migrations:migrate
-    ```
-    (Type `yes` if prompted to confirm.)
+3. **Build and start all services:**
+   ```bash
+   docker compose up -d --build
+   ```
 
-## 3. Running the Application
+4. **Run the setup script (installs Composer deps, creates DBs, runs migrations, runs tests):**
+   ```bash
+   docker compose run --rm setup
+   ```
+   - This will: install dependencies, create and migrate dev/test DBs, and run the test suite.
 
-*   Start all services:
-    ```bash
-    docker compose up -d
-    ```
-*   **API Base URL:** The Nginx service is mapped to port `8081` on your host by default (see `compose.yaml`). The application will be accessible at `http://localhost:8081`.
+5. **Access the app:**
+   - **API base URL:** [http://localhost:8081](http://localhost:8081)
+   - **API documentation (Stoplight UI):** [http://localhost:8081/api/doc](http://localhost:8081/api/doc)
+   - **MailHog (view emails):** [http://localhost:8025](http://localhost:8025)
 
-## 4. Accessing Key Application Pages/Endpoints
+---
 
-a.  **API Documentation (Swagger UI):**
-    Open your browser and navigate to:
-    `http://localhost:8081/api/doc`
-    This page lists all available API endpoints and allows you to interact with them directly.
+## API Usage
 
-b.  **MailHog (Email Catching Service):**
-    If MailHog is running (as configured in `compose.yaml`), you can see emails sent by the application (like subscription confirmations):
-    Open your browser and navigate to:
-    `http://localhost:8025`
+- **Get weather forecast:**
+  ```http
+  GET /api/weather?city=London&days=3
+  ```
+- **Subscribe:**
+  ```http
+  POST /api/subscribe
+  Content-Type: application/json
+  {
+    "email": "user@example.com",
+    "city": "Paris",
+    "frequency": "hourly"  // or "daily"
+  }
+  ```
+- **Confirm subscription:**
+  - Click the link in the confirmation email (see MailHog inbox).
+- **Unsubscribe:**
+  - Click the link in the weather update email (see MailHog inbox).
 
-c.  **Example API Interactions (can also be performed via the Swagger UI at `/api/doc`):**
+All endpoints are documented and testable via [http://localhost:8081/api/doc](http://localhost:8081/api/doc).
 
-    i.  **GET Weather Forecast:**
-        `GET http://localhost:8081/api/weather?city=London&days=3`
-        (Requires `WEATHER_API_KEY` to be correctly set in `.env.local`)
+---
 
-    ii. **POST Subscribe to Weather Updates:**
-        Send a POST request to `http://localhost:8081/api/subscribe`
-        *   **Using `application/json` Content-Type:**
-            ```json
-            {
-                "email": "user@example.com",
-                "city": "Paris",
-                "frequency": "hourly" 
-            }
-            ```
-            (Valid frequencies are "hourly" or "daily")
-        *   **Using `application/x-www-form-urlencoded` Content-Type:**
-            `email=user@example.com&city=Paris&frequency=hourly`
+## Running the Weather Update Command
 
-        A confirmation email should be sent. Check MailHog.
+Send weather updates to subscribers (emails appear in MailHog):
+```bash
+docker compose exec php php bin/console app:send-weather-updates hourly
+docker compose exec php php bin/console app:send-weather-updates daily
+```
 
-    iii. **GET Confirm Subscription:**
-        Click the confirmation link from the email received in MailHog. The link will be in the format:
-        `http://localhost:8081/api/confirm/<confirmation_token>`
+---
 
-    iv. **GET Unsubscribe:**
-        To unsubscribe, a user would click a link (typically provided in weather update emails). The link format is:
-        `http://localhost:8081/api/unsubscribe/<unsubscribe_token>`
-        (The `unsubscribe_token` is generated and stored upon successful subscription confirmation.)
+## Running Tests
 
-## 5. Running the `SendWeatherUpdatesCommand`
+Run the full test suite (after setup, or any time):
+```bash
+docker compose exec php bin/phpunit
+```
+All tests should pass.
 
-This Symfony console command fetches weather forecasts and sends them to confirmed subscribers based on their chosen frequency.
+---
 
-a.  **To run for hourly subscriptions:**
-    ```bash
-    docker compose exec php php bin/console app:send-weather-updates hourly
-    ```
+## Stopping and Cleaning Up
 
-b.  **To run for daily subscriptions:**
-    ```bash
-    docker compose exec php php bin/console app:send-weather-updates daily
-    ```
-    Output will indicate if emails were sent or if no subscriptions were found. Emails will appear in MailHog. This command requires a valid `WEATHER_API_KEY` in `.env.local`.
+- Stop all services:
+  ```bash
+  docker compose down
+  ```
+- Stop and remove database data (for a clean DB):
+  ```bash
+  docker compose down -v
+  ```
 
-## 6. Running Tests (Current Status)
+---
 
-*   The controller tests for subscriptions (`SubscriptionControllerTest.php`) are currently **skipped** due to a persistent issue with the test database setup when using the `dama/doctrine-test-bundle`. This is to allow the application to be used and other tests to pass.
-*   The command tests (`SendWeatherUpdatesCommandTest.php`) should pass.
-*   To run all tests:
-    ```bash
-    docker compose exec php vendor/bin/phpunit
-    ```
-
-## 7. Stopping the Application
-
-*   To stop all services:
-    ```bash
-    docker compose down
-    ```
-*   To stop services and remove the database volume (useful for a clean restart of the database):
-    ```bash
-    docker compose down -v
-    ```
-
-## 8. Troubleshooting / Notes
-
-*   If you encounter issues with Docker services not starting (e.g., port conflicts), check the `ports` configuration in `compose.yaml` and ensure the host ports are free.
-*   The MailHog service might show a platform warning (`linux/amd64` vs `linux/arm64/v8`) when starting on ARM-based machines (like Apple Silicon Macs). This is generally a warning and MailHog should still function. If it causes critical issues, an alternative MailHog image or configuration might be needed.
+## Notes
+- The setup script (`docker/php/init.sh`) automates all onboarding steps.
+- MailHog works out of the box for email testing.
+- The API documentation uses Stoplight UI at `/api/doc`.
+- For any issues, check Docker logs or ensure your `.env.local` is correct.
